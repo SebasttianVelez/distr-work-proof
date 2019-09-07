@@ -16,6 +16,13 @@ worker.bind("tcp://*:5557")
 sink = context.socket(zmq.PUSH)
 sink.connect("tcp://localhost:5558")
 
+#
+sinkFinal = context.socket(zmq.PULL)
+sinkFinal.bind("tcp://*:5556")
+
+
+
+
 
 # Function to create a hash in hexacode
 def hashString(s):
@@ -41,13 +48,21 @@ sink.send(b'0')
 
 
 # This is the last hash
-challenge = hashString("CS-rocks!")
-found = False
+challenge = (hashString("CS-rocks!")).encode()
+found = ("False").encode()
 
-while not found:
-    worker.send_string(challenge)
+#while not found:
 
 #print("")
+while True:
+    if (found.decode() == "True"):
+        worker.send_multipart([challenge,found])
+        #worker.send_multipart([challenge,found])
+        break
+    worker.send_multipart([challenge,found])
+    found = sinkFinal.recv()
+    #print (found.decode())
+
 
 # Give 0MQ time to deliver
 time.sleep(1)

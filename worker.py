@@ -7,8 +7,8 @@ import hashlib
 context = zmq.Context()
 
 # Socket to receive messages on
-receiver = context.socket(zmq.PULL)
-receiver.connect("tcp://localhost:5557")
+fan = context.socket(zmq.PULL)
+fan.connect("tcp://localhost:5557")
 
 # Socket to send messages to
 sink = context.socket(zmq.PUSH)
@@ -27,26 +27,33 @@ def generation(challenge, size = 25):
     attempt = challenge + answer
     return attempt, answer
 
-found = False
-
 def proofOfWork(challenge):
+# Process tasks forever
     found = False
     attempts = 0
-    while not found:
-        attempt, answer = generation(challenge, 64)
-        print(attempt)
-        hash = hashString(attempt)
-        if hash.startswith('0000'):
-            found = True
-            #print(hash)
-        attempts += 1
-    #print(attempts)
-    return answer, found
+    attempt, answer = generation(challenge, 64)
+    print(attempt)
+    hash = hashString(attempt)
+    if hash.startswith('0000'):
+        found = True
+        print(hash)
+    attempts += 1
+    print(attempts)
+    #print (found)
+ 
+    return answer, str(found)
 
-# Process tasks forever
-while not found:
-    challenge = receiver.recv()
-    answer, found = proofOfWork(challenge.decode())
-    sink.send_string(answer)
+# Receive the challenge of Fan
+#Time 1 worker : 53,77
+#Time 2 workers :
 
+challenge, found = fan.recv_multipart()
+while True:
+
+    if (found == "True"):
+        sink.send_multipart([answer.encode(), found.encode()])
+        break
+    else:
+        answer, found = proofOfWork(challenge.decode())
+        sink.send_multipart([answer.encode(), found.encode()])
     # Send results to sink
