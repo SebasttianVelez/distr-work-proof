@@ -12,7 +12,7 @@ fan.connect("tcp://localhost:5557")
 
 # Socket to send messages to
 sink = context.socket(zmq.PUSH)
-sink.connect("tcp://localhost:5558")
+sink.connect("udp://localhost:5558")
 
 # Function to create a hash in hexacode
 def hashString(s):
@@ -28,32 +28,24 @@ def generation(challenge, size = 25):
     return attempt, answer
 
 def proofOfWork(challenge):
-# Process tasks forever
     found = False
     attempts = 0
-    attempt, answer = generation(challenge, 64)
-    print(attempt)
-    hash = hashString(attempt)
-    if hash.startswith('0000'):
-        found = True
-        print(hash)
-    attempts += 1
-    print(attempts)
-    #print (found)
- 
-    return answer, str(found)
+    while not found:
+        attempt, answer = generation(challenge, 64)
+        print(attempt)
+        hash = hashString(attempt)
+        if hash.startswith('00000'):
+            found = True
+            #print(hash)
+        attempts += 1
+    #print(attempts)
+    return answer, found
 
-# Receive the challenge of Fan
-#Time 1 worker : 53,77
-#Time 2 workers :
 
-challenge, found = fan.recv_multipart()
-while True:
+found = False
+challenge = fan.recv_string()
 
-    if (found == "True"):
-        sink.send_multipart([answer.encode(), found.encode()])
-        break
-    else:
-        answer, found = proofOfWork(challenge.decode())
-        sink.send_multipart([answer.encode(), found.encode()])
-    # Send results to sink
+while not found:
+        answer, found = proofOfWork(challenge)
+        if found:
+            sink.send_string(answer)
