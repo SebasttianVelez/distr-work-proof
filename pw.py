@@ -22,11 +22,11 @@ def proofOfWork(challenge):
         hash = hashString(attempt)
         if hash.startswith('0000'):
             found = True
-            #print(hash)
+            print(hash)
         attempts += 1
     #print(attempts)
     return answer
 
 challenge = hashString("CS-rocks!")
 answer = proofOfWork(challenge)
-print(answer.startswith("00000"))
+print (hashString(answer))

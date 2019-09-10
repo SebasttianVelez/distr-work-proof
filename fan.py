@@ -1,7 +1,4 @@
 import zmq
-import random
-import time
-import string
 import hashlib
 
 
@@ -34,5 +31,5 @@ sink.send(b'0')
 challenge = hashString("CS-rocks!")
 
 
-for i in range(3):
+for i in range(8):
     worker.send_string(challenge)

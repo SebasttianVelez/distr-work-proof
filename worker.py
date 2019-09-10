@@ -1,6 +1,5 @@
 import zmq
 import random
-import time
 import string
 import hashlib
 
@@ -12,7 +11,7 @@ fan.connect("tcp://localhost:5557")
 
 # Socket to send messages to
 sink = context.socket(zmq.PUSH)
-sink.connect("udp://localhost:5558")
+sink.connect("tcp://localhost:5558")
 
 # Function to create a hash in hexacode
 def hashString(s):
@@ -38,14 +37,9 @@ def proofOfWork(challenge):
             found = True
             #print(hash)
         attempts += 1
-    #print(attempts)
-    return answer, found
+    print(answer)
+    sink.send_string(answer)
 
-
-found = False
+# Receive the challenge and do the proof of work
 challenge = fan.recv_string()
-
-while not found:
-        answer, found = proofOfWork(challenge)
-        if found:
-            sink.send_string(answer)
+proofOfWork(challenge)
